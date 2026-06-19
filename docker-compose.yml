@@ -1,40 +1,50 @@
+# Docker Compose file format version
 version: '3.9'
 
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: docker-app
+      context: .               # Build context in the current directory
+      dockerfile: Dockerfile   # Dockerfile used to build the application image
+    container_name: docker-app # Custom container name for the application
     ports:
-      - "8082:8080"
+      - "8082:8080"            # Map host port 8082 to container port 8080
     environment:
+      # Database connection configuration for the Spring Boot application
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: app
+    # Start the database container before the app
     depends_on:
       - db
+    # Connect app service to the custom network
     networks:
       - app-network
 
   db:
-    image: postgres:16
-    container_name: postgres-db
-    restart: unless-stopped
+    image: postgres:16           # Use PostgreSQL version 16 image
+    container_name: postgres-db  # Custom container name for PostgreSQL
+    restart: unless-stopped      # Restart container unless explicitly stopped
+    # PostgreSQL database configuration
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: user
       POSTGRES_PASSWORD: app
+    # Expose PostgreSQL on host port 5432
     ports:
       - "5432:5432"
+    # Persist PostgreSQL data using a named volume
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    # Connect database service to the same network
     networks:
       - app-network
 
+# Volume for persistent database storage
 volumes:
   postgres-data:
 
+# Custom bridge network for communication between application and database containers
 networks:
   app-network:
     driver: bridge
